@@ -48,7 +48,7 @@ bool SendEmailInit(){
 	memset(R_Buffer,'\0',10000);
 	memset(&remote_addr,0,sizeof(remote_addr)); //清零
 	remote_addr.sin_family=AF_INET; //设置为IP通信
-	remote_addr.sin_addr.s_addr=inet_addr("220.181.15.161");//服务器IP地址	
+	remote_addr.sin_addr.s_addr=inet_addr("220.181.15.161");//服务器IP地址,使用时需替换为此程序登录的邮箱服务器的IP	
 	remote_addr.sin_port=htons(465); //服务器端口号
 	EXIT_IF_TRUE((ctx = SSL_CTX_new (TLS_client_method())) == NULL);
 	if((nFd=socket(PF_INET,SOCK_STREAM,0))<0)
