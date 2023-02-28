@@ -24,10 +24,9 @@ int nFd_R;
 //char szBuffer[1024];
 char R_Buffer[10000];
 char W_Buffer[10000];
-char U_C_name[100] = {"xxxxxxx.com"};//你要向那个电子邮箱发送IP地址
-char U_name[100] = {"xxxxxx.com"};//此程序要登录哪个电子邮箱
-char U_password[100] = {"xxxxxxxxxx"};//此程序登录的电子邮箱的密码
-char *base64_encode(char *str) ;
+char U_C_name[100] = {"xxxxx"};//要发送到的邮箱
+char U_name[100] = {"xxxxxx"};//登录邮箱的BASE64编码
+char U_password[100] = {"xxxxxxxxx"};//登录邮箱密码的BASE64编码
 void EXIT_IF_TRUE (bool x){
         if (x){
             do {
@@ -48,7 +47,7 @@ bool SendEmailInit(){
 	memset(R_Buffer,'\0',10000);
 	memset(&remote_addr,0,sizeof(remote_addr)); //清零
 	remote_addr.sin_family=AF_INET; //设置为IP通信
-	remote_addr.sin_addr.s_addr=inet_addr("220.181.15.161");//服务器IP地址,使用时需替换为此程序登录的邮箱服务器的IP	
+	remote_addr.sin_addr.s_addr=inet_addr("220.181.15.161");//服务器IP地址	
 	remote_addr.sin_port=htons(465); //服务器端口号
 	EXIT_IF_TRUE((ctx = SSL_CTX_new (TLS_client_method())) == NULL);
 	if((nFd=socket(PF_INET,SOCK_STREAM,0))<0)
@@ -71,10 +70,10 @@ bool SendEmailInit(){
 	SSL_write(ssl,"auth login",strlen("auth login"));
 	SSL_write(ssl,"\r\n",strlen("\r\n"));
 	SSL_read(ssl,R_Buffer,BUFSIZ);
-	SSL_write(ssl,base64_encode(U_name),strlen(base64_encode(U_name)));
+	SSL_write(ssl,U_name,strlen(U_name));
         SSL_write(ssl,"\r\n",strlen("\r\n"));
 	SSL_read(ssl,R_Buffer,BUFSIZ);
-	SSL_write(ssl,base64_encode(U_password),strlen(base64_encode(U_password)));
+	SSL_write(ssl,U_password,strlen(U_password));
         SSL_write(ssl,"\r\n",strlen("\r\n"));
 	SSL_read(ssl,R_Buffer,BUFSIZ);
 	std::cout << '[' << time(0) << ']' << "SMTP协议初始化完成或登录失败" << std::endl;
@@ -102,51 +101,17 @@ bool SendEmailClose(){
 	SSL_CTX_free (ctx);
 	close(nFd);
 }
-char *base64_encode(char *str)
-{
-    long len;
-    long str_len;
-    char *res;
-    int i,j;
-    char base64_table[100]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    str_len=strlen(str);
-    if(str_len % 3 == 0)
-        len=str_len/3*4;
-    else
-        len=(str_len/3+1)*4;
-    res=(char*)(malloc(sizeof(unsigned char)*len+1));
-    res[len]='\0';
-    for(i=0,j=0;i<len-2;j+=3,i+=4)
-    {
-        res[i]=base64_table[str[j]>>2]; //取出第一个字符的前6位并找出对应的结果字符
-        res[i+1]=base64_table[(str[j]&0x3)<<4 | (str[j+1]>>4)]; //将第一个字符的后位与第二个字符的前4位进行组合并找到对应的结果字符
-        res[i+2]=base64_table[(str[j+1]&0xf)<<2 | (str[j+2]>>6)]; //将第二个字符的后4位与第三个字符的前2位组合并找出对应的结果字符
-        res[i+3]=base64_table[str[j+2]&0x3f]; //取出第三个字符的后6位并找出结果字符
-    }
-
-    switch(str_len % 3)
-    {
-        case 1:
-            res[i-2]='=';
-            res[i-1]='=';
-            break;
-        case 2:
-            res[i-1]='=';
-            break;
-    }
-    return res;
-}
 char addressBuffer[INET6_ADDRSTRLEN+20];
 char addressBuffer_last[INET6_ADDRSTRLEN+20];
 char a[10000];
 int i3 = 0;
 int main(){
-	std::freopen("log.txt","w",stdout);
+	std::freopen("/home/pi/log.txt","w",stdout);
 	Init_ssl();
 	std::cout << '[' << time(0) << ']' << "SSL INIT OK" << std::endl;
 	std::ifstream srcFile;
 	while(1){
-		srcFile = std::ifstream("/proc/net/ipv6_route", std::ios::in);//重新打开刷新
+		srcFile = std::ifstream("/proc/net/ipv6_route", std::ios::in);
 		for(int i = 0;i < strlen(addressBuffer);i++){
                         addressBuffer[i] = ' ';
                 }
@@ -171,7 +136,7 @@ int main(){
 			}
 		}
 		strcpy(addressBuffer_last,addressBuffer);
-		for(int delay_i = 0;delay_i < 2290000;delay_i++);//延时，为了不过于频繁读取IP文件
+		for(int delay_i = 0;delay_i < 2290000;delay_i++);
 		srcFile.close();
 	}
 }
